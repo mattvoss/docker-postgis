@@ -2,6 +2,7 @@ FROM ubuntu:12.04
 MAINTAINER Helmi <helmi@tuxuri.com>
 
 RUN echo "deb http://archive.ubuntu.com/ubuntu precise main universe" > /etc/apt/sources.list
+RUN chmod ugo+rw /dev/null
 RUN apt-get -y update
 RUN apt-get -y install wget
 RUN wget --quiet --no-check-certificate -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
