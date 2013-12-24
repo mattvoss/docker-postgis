@@ -4,7 +4,8 @@ DATADIR="/var/lib/postgresql/9.3/main"
 CONF="/etc/postgresql/9.3/main/postgresql.conf"
 POSTGRES="/usr/lib/postgresql/9.3/bin/postgres"
 INITDB="/usr/lib/postgresql/9.3/bin/initdb"
-
+PASS=${PASS:-docker}
+USERNAME=${USERNAME:-docker}
 # test if DATADIR is existent
 if [ ! -d $DATADIR ]; then
   echo "Creating Postgres data at $DATADIR"
@@ -16,11 +17,15 @@ if [ ! "$(ls -A $DATADIR)" ]; then
   echo "Initializing Postgres Database at $DATADIR"
   chown -R postgres $DATADIR
   su postgres sh -c "$INITDB $DATADIR"
-  su postgres sh -c "$POSTGRES --single -D $DATADIR -c config_file=$CONF" <<< "CREATE USER $USERNAME WITH SUPERUSER PASSWORD '$PASS';"
+  service postgresql start
+  su postgres sh -c "createuser -d -s -r -l $USERNAME" 
+  su postgres sh -c "psql postgres -c \"ALTER USER $USERNAME WITH ENCRYPTED PASSWORD '$PASS'\""
+  service postgresql stop
+  # su postgres sh -c "$POSTGRES --single -D $DATADIR -c config_file=$CONF" <<< "CREATE USER $USERNAME WITH SUPERUSER PASSWORD '$PASS';"
 fi
 
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
 
 su postgres sh -c "$POSTGRES -D $DATADIR -c config_file=$CONF" &
-
+#service postgresql start
 wait $!
